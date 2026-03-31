@@ -2,6 +2,7 @@ import numpy as np
 import warp as wp
 
 from .particles import ParticleSystem
+from .constants import SIM_DEVICE
 
 class SnowObject:
     def __init__(self, particle_diameter=0.0072, target_density=400):
@@ -75,10 +76,10 @@ def create_particle_system(snow_objects):
         total_particles += obj["num_particles"]
 
     positions = wp.array(
-        np.concatenate(all_positions), dtype=wp.vec3, device="cuda"
+        np.concatenate(all_positions), dtype=wp.vec3, device=SIM_DEVICE
     )
     velocities = wp.array(
-        np.concatenate(all_velocities), dtype=wp.vec3, device="cuda"
+        np.concatenate(all_velocities), dtype=wp.vec3, device=SIM_DEVICE
     )
 
     particle_system = ParticleSystem(num_particles=total_particles, positions=positions, velocities=velocities)

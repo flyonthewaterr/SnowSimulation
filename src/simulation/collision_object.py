@@ -1,5 +1,6 @@
 import numpy as np
 import warp as wp
+from .constants import SIM_DEVICE
 
 @wp.func
 def collision_response(
@@ -138,8 +139,8 @@ class CollisionObject:
             velocities_np[i] = self.velocity_function(pos)
 
         # Convert to Warp arrays
-        level_set_values = wp.array(level_set_values_np, dtype=float, device="cuda")
-        normals = wp.array(normals_np, dtype=wp.vec3, device="cuda")
-        velocities = wp.array(velocities_np, dtype=wp.vec3, device="cuda")
+        level_set_values = wp.array(level_set_values_np, dtype=float, device=SIM_DEVICE)
+        normals = wp.array(normals_np, dtype=wp.vec3, device=SIM_DEVICE)
+        velocities = wp.array(velocities_np, dtype=wp.vec3, device=SIM_DEVICE)
 
         return level_set_values, normals, velocities

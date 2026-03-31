@@ -558,21 +558,21 @@ class Grid:
         self.grid_space = grid_space
 
         # Initialize grid properties as arrays
-        self.positions = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.velocities = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.new_velocities = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.velocities_star = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.forces = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.mass = wp.zeros(size**3, dtype=float, device="cuda")
-        self.active = wp.zeros(size**3, dtype=wp.bool, device="cuda")
+        self.positions = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.velocities = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.new_velocities = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.velocities_star = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.forces = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.mass = wp.zeros(size**3, dtype=float, device=SIM_DEVICE)
+        self.active = wp.zeros(size**3, dtype=wp.bool, device=SIM_DEVICE)
 
-        self.r = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.p = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.Er = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.Ep = wp.zeros(size**3, dtype=wp.vec3, device="cuda")
-        self.rEr = wp.zeros(size**3, dtype=float, device="cuda")
-        self.err = wp.ones(size**3, dtype=wp.vec3, device="cuda")
-        self.imp_active = wp.zeros(size**3, dtype=wp.bool, device="cuda")
+        self.r = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.p = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.Er = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.Ep = wp.zeros(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.rEr = wp.zeros(size**3, dtype=float, device=SIM_DEVICE)
+        self.err = wp.ones(size**3, dtype=wp.vec3, device=SIM_DEVICE)
+        self.imp_active = wp.zeros(size**3, dtype=wp.bool, device=SIM_DEVICE)
 
         wp.launch(
             kernel=initialize_positions_kernel,
@@ -700,10 +700,10 @@ class Grid:
             friction_coefficients_np[i] = obj.friction_coefficient
 
         # Flatten the arrays for Warp
-        level_set_values = wp.array2d(level_set_values_np.reshape(num_grids, num_objects), dtype=float, device="cuda")
-        normals = wp.array2d(normals_np, dtype=wp.vec3, device="cuda")  # Shape: [num_grids, num_objects]
-        velocities = wp.array2d(velocities_np, dtype=wp.vec3, device="cuda")  # Shape: [num_grids, num_objects]
-        friction_coefficients = wp.array(friction_coefficients_np, dtype=float, device="cuda")
+        level_set_values = wp.array2d(level_set_values_np.reshape(num_grids, num_objects), dtype=float, device=SIM_DEVICE)
+        normals = wp.array2d(normals_np, dtype=wp.vec3, device=SIM_DEVICE)  # Shape: [num_grids, num_objects]
+        velocities = wp.array2d(velocities_np, dtype=wp.vec3, device=SIM_DEVICE)  # Shape: [num_grids, num_objects]
+        friction_coefficients = wp.array(friction_coefficients_np, dtype=float, device=SIM_DEVICE)
 
         # Launch the kernel
         wp.launch(
@@ -758,7 +758,7 @@ class Grid:
         # print(f"Number of NaN values in grid_new_velocities stage 4: {nan_count}")
 
         for i in range(MAX_IMPLICIT_ITERS):
-            done = wp.array([1], dtype=int, device="cuda")  # 1 means done, 0 means not done
+            done = wp.array([1], dtype=int, device=SIM_DEVICE)  # 1 means done, 0 means not done
             wp.launch(implicit_update_velocity_kernel, 
                       dim=self.size**3, 
                       inputs=[self.new_velocities,
@@ -834,7 +834,7 @@ def count_nan_values_in_array(array: wp.array):
     num_elements = array.shape[0]
 
     # Create a Warp array to store the count
-    nan_count = wp.zeros(1, dtype=int, device="cuda")
+    nan_count = wp.zeros(1, dtype=int, device=SIM_DEVICE)
 
     # Launch the kernel
     wp.launch(

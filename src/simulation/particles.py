@@ -376,10 +376,10 @@ class ParticleSystem:
 
         if velocities is None:
             # Initialize velocities to zero if not provided
-            self.velocities = wp.zeros(num_particles, dtype=wp.vec3, device="cuda")
+            self.velocities = wp.zeros(num_particles, dtype=wp.vec3, device=SIM_DEVICE)
         elif isinstance(velocities, wp.vec3):
             # Use the provided wp.vec3 to initialize all velocities
-            self.velocities = wp.array([velocities] * num_particles, dtype=wp.vec3, device="cuda")
+            self.velocities = wp.array([velocities] * num_particles, dtype=wp.vec3, device=SIM_DEVICE)
         elif isinstance(velocities, wp.array) and velocities.dtype == wp.vec3:
             if len(velocities) != num_particles:
                 raise ValueError("The length of the velocities array must match num_particles.")
@@ -388,9 +388,9 @@ class ParticleSystem:
         else:
             raise ValueError("Velocities must be a wp.vec3 or None.")
         
-        self.masses = wp.ones(num_particles, dtype=float, device="cuda")
+        self.masses = wp.ones(num_particles, dtype=float, device=SIM_DEVICE)
         # self.masses = wp.full(num_particles, 0.4, dtype=float, device="cuda")
-        self.initial_volumes = wp.ones(num_particles, dtype=float, device="cuda")
+        self.initial_volumes = wp.ones(num_particles, dtype=float, device=SIM_DEVICE)
 
         # Deformation gradients
         identity_matrix = wp.mat33(
@@ -398,19 +398,19 @@ class ParticleSystem:
             0.0, 1.0, 0.0,
             0.0, 0.0, 1.0
         )
-        self.F_E = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device="cuda")
-        self.F_P = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device="cuda")
-        self.deformation_gradient = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device="cuda")
-        self.densities = wp.zeros(num_particles, dtype=float, device="cuda")
-        self.stresses = wp.zeros(num_particles, dtype=wp.mat33, device="cuda")
+        self.F_E = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device=SIM_DEVICE)
+        self.F_P = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device=SIM_DEVICE)
+        self.deformation_gradient = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device=SIM_DEVICE)
+        self.densities = wp.zeros(num_particles, dtype=float, device=SIM_DEVICE)
+        self.stresses = wp.zeros(num_particles, dtype=wp.mat33, device=SIM_DEVICE)
 
         # Material properties
         self.mu_0 = MU
         self.lambda_0 = LAMBDA
         self.alpha = ALPHA
 
-        self.polar_r = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device="cuda")
-        self.polar_s = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device="cuda")
+        self.polar_r = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device=SIM_DEVICE)
+        self.polar_s = wp.array([identity_matrix] * num_particles, dtype=wp.mat33, device=SIM_DEVICE)
 
     def initialize_particle(self, index, position, velocity, mass):
         self.positions[index] = wp.vec3(*position)
@@ -426,7 +426,7 @@ class ParticleSystem:
         """
         # Step 3
 
-        debug_flags = wp.zeros(self.num_particles, dtype=int, device="cuda")
+        debug_flags = wp.zeros(self.num_particles, dtype=int, device=SIM_DEVICE)
 
         # Launch debug kernel
         wp.launch(
@@ -524,10 +524,10 @@ class ParticleSystem:
             friction_coefficients_np[i] = obj.friction_coefficient
 
         # Flatten the arrays for Warp
-        level_set_values = wp.array(level_set_values_np.reshape(num_particles, num_objects), dtype=float, device="cuda")
-        normals = wp.array(normals_np.reshape(num_particles, num_objects, 3), dtype=wp.vec3, device="cuda")
-        velocities = wp.array(velocities_np.reshape(num_particles, num_objects, 3), dtype=wp.vec3, device="cuda")
-        friction_coefficients = wp.array(friction_coefficients_np, dtype=float, device="cuda")
+        level_set_values = wp.array(level_set_values_np.reshape(num_particles, num_objects), dtype=float, device=SIM_DEVICE)
+        normals = wp.array(normals_np.reshape(num_particles, num_objects, 3), dtype=wp.vec3, device=SIM_DEVICE)
+        velocities = wp.array(velocities_np.reshape(num_particles, num_objects, 3), dtype=wp.vec3, device=SIM_DEVICE)
+        friction_coefficients = wp.array(friction_coefficients_np, dtype=float, device=SIM_DEVICE)
 
         wp.launch(
             kernel=apply_collision_kernel,
@@ -557,7 +557,7 @@ def count_nan_values_in_array(array: wp.array):
     num_elements = array.shape[0]
 
     # Create a Warp array to store the count
-    nan_count = wp.zeros(1, dtype=int, device="cuda")
+    nan_count = wp.zeros(1, dtype=int, device=SIM_DEVICE)
 
     # Launch the kernel
     wp.launch(

@@ -1,3 +1,18 @@
+import warp as wp
+
+
+def _resolve_sim_device():
+	try:
+		wp.init()
+		if wp.is_cuda_available():
+			return "cuda"
+	except Exception:
+		pass
+	return "cpu"
+
+
+SIM_DEVICE = _resolve_sim_device()
+
 # Explicit velocity update: timestep [1e-4, 1e-3]
 # Implicit velocity update: timestep [5e-3, 2e-2]
 TIMESTEP = 0.001
